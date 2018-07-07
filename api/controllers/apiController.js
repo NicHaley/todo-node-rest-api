@@ -1,5 +1,8 @@
 "use strict";
 
+const request = require('request');
+const rp = require('request-promise');
+
 const fetch = require('node-fetch');
 const clientId = process.env['SPOTIFY_CLIENT_ID']
 const clientSecret = process.env['SPOTIFY_CLIENT_SECRET']
@@ -10,14 +13,26 @@ const spotifyAPIBaseUri = "https://api.spotify.com";
 const spotifyAccountsBaseUri = "https://accounts.spotify.com";
 
 const refreshAccessToken = () => {
-  return fetch(`${spotifyAccountsBaseUri}/api/token`, {
+  console.log(5555, clientId, refreshToken);
+  const options = {
     method: 'POST',
+    uri: `${spotifyAccountsBaseUri}/api/token`,
     body: `grant_type=refresh_token&refresh_token=${refreshToken}`,
     headers: {
       'Authorization': `Basic ${new Buffer(`${clientId}:${clientSecret}`).toString('base64')}`,
       'Content-Type': 'application/x-www-form-urlencoded'
     }
-  })
+  }
+
+  return rp(options);
+  // return fetch(`${spotifyAccountsBaseUri}/api/token`, {
+  //   method: 'POST',
+  //   body: `grant_type=refresh_token&refresh_token=${refreshToken}`,
+    // headers: {
+    //   'Authorization': `Basic ${new Buffer(`${clientId}:${clientSecret}`).toString('base64')}`,
+    //   'Content-Type': 'application/x-www-form-urlencoded'
+    // }
+  // })
 }
 
 const getRecentlyPlayed = () => {
@@ -33,7 +48,6 @@ const getRecentlyPlayed = () => {
 exports.get_spotify = (req, res) => {
   getRecentlyPlayed()
     .then(recentlyPlayedResponse => {
-      console.log(1111, recentlyPlayedResponse)
       if (recentlyPlayedResponse.status >= 400 && recentlyPlayedResponse.status < 600) {
         throw new Error("Bad response from server");
       }
@@ -43,9 +57,13 @@ exports.get_spotify = (req, res) => {
       res.send(recentlyPlayedResponseJSON);
     })
     .catch(() => {
-      refreshAccessToken().then(response => {
-        console.log(2222, response);
-      })
+      refreshAccessToken()
+        .then(response => {
+          console.log(2222, response);
+        })
+        .catch(response => {
+          console.log(4444, response)
+        })
         // .then(refreshResponse => response.json())
         // .then(refreshResponseJSON => {
         //   accessToken = refreshResponseJSON["access_token"];
