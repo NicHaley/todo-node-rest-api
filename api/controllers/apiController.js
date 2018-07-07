@@ -13,7 +13,6 @@ const spotifyAPIBaseUri = "https://api.spotify.com";
 const spotifyAccountsBaseUri = "https://accounts.spotify.com";
 
 const refreshAccessToken = () => {
-  console.log(5555, clientId, refreshToken);
   const options = {
     method: 'POST',
     uri: `${spotifyAccountsBaseUri}/api/token`,
@@ -23,25 +22,20 @@ const refreshAccessToken = () => {
       'Content-Type': 'application/x-www-form-urlencoded'
     }
   }
-
   return rp(options);
-  // return fetch(`${spotifyAccountsBaseUri}/api/token`, {
-  //   method: 'POST',
-  //   body: `grant_type=refresh_token&refresh_token=${refreshToken}`,
-    // headers: {
-    //   'Authorization': `Basic ${new Buffer(`${clientId}:${clientSecret}`).toString('base64')}`,
-    //   'Content-Type': 'application/x-www-form-urlencoded'
-    // }
-  // })
 }
 
 const getRecentlyPlayed = () => {
-  return fetch(`${spotifyAPIBaseUri}/v1/me/player/recently-played`, {
+  console.log(123, accessToken)
+  const options = {
+    method: 'GET',
+    uri: `${spotifyAPIBaseUri}/v1/me/player/recently-played`,
     headers: {
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/x-www-form-urlencoded'
     }
-  })
+  }
+  return rp(options);
 }
 
 
@@ -57,27 +51,28 @@ exports.get_spotify = (req, res) => {
       res.send(recentlyPlayedResponseJSON);
     })
     .catch(() => {
+      console.log(111);
       refreshAccessToken()
         .then(response => {
-          console.log(2222, response);
+          const jsonResponse = JSON.parse(response);
+          accessToken = jsonResponse["access_token"];
+
+          getRecentlyPlayed().then(recentlyPlayedResponse => {
+            // console.log(2222, recentlyPlayedResponse)
+          }).catch(err => {
+            console.log(333, err)
+          })
+
+            // .then(recentlyPlayedResponse => JSON.parse(recentlyPlayedResponse))
+            // .then(recentlyPlayedResponseJSON => {
+            //   res.send(recentlyPlayedResponseJSON);
+            // })
+            // .catch(() => {
+            //   res.status(500).send("Failed to get recently played tracks");
+            // });
         })
-        .catch(response => {
-          console.log(4444, response)
-        })
-        // .then(refreshResponse => response.json())
-        // .then(refreshResponseJSON => {
-        //   accessToken = refreshResponseJSON["access_token"];
-        //   getRecentlyPlayed()
-        //     .then(recentlyPlayedResponse => recentlyPlayedResponse.json())
-        //     .then(recentlyPlayedResponseJSON => {
-        //       res.send(recentlyPlayedResponseJSON);
-        //     })
-        //     .catch(() => {
-        //       res.status(500).send("Failed to get recently played tracks");
-        //     });
-        // })
-        // .catch(() => {
-        //   res.status(500).send("Failed to refresh Spotify token");
-        // });
+        .catch(err => {
+          res.status(500).send("Failed to refresh Spotify token");
+        });
     });
 };
