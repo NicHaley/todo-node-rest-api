@@ -15,7 +15,7 @@ mongoose.connect('mongodb://localhost/Tododb', {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-var routes = require('./api/routes/todoListRoutes'); //importing route
+var routes = require('./api/routes/apiRoutes'); //importing route
 routes(app); //register the route
 
 app.use(function(req, res) {

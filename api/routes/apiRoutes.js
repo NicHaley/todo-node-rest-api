@@ -2,7 +2,6 @@
 module.exports = function(app) {
   var apis = require('../controllers/apiController');
 
-  // todoList Routes
-  app.route('/tasks')
+  app.route('/')
     .get(apis.get_spotify)
 };
