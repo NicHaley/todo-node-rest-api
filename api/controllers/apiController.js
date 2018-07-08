@@ -26,13 +26,11 @@ const refreshAccessToken = () => {
 }
 
 const getRecentlyPlayed = () => {
-  console.log(123, accessToken)
   const options = {
     method: 'GET',
-    uri: `${spotifyAPIBaseUri}/v1/me/player/recently-played`,
+    uri: `${spotifyAPIBaseUri}/v1/me/player/currently-playing`,
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Authorization': `Bearer ${accessToken}`
     }
   }
   return rp(options);
@@ -51,25 +49,19 @@ exports.get_spotify = (req, res) => {
       res.send(recentlyPlayedResponseJSON);
     })
     .catch(() => {
-      console.log(111);
       refreshAccessToken()
         .then(response => {
           const jsonResponse = JSON.parse(response);
           accessToken = jsonResponse["access_token"];
 
-          getRecentlyPlayed().then(recentlyPlayedResponse => {
-            // console.log(2222, recentlyPlayedResponse)
-          }).catch(err => {
-            console.log(333, err)
-          })
-
-            // .then(recentlyPlayedResponse => JSON.parse(recentlyPlayedResponse))
-            // .then(recentlyPlayedResponseJSON => {
-            //   res.send(recentlyPlayedResponseJSON);
-            // })
-            // .catch(() => {
-            //   res.status(500).send("Failed to get recently played tracks");
-            // });
+          getRecentlyPlayed()
+            .then(recentlyPlayedResponse => {
+              const recentlyPlayedResponseJSON = JSON.parse(recentlyPlayedResponse);
+              res.send(recentlyPlayedResponseJSON);
+            })
+            .catch(() => {
+              res.status(500).send("Failed to get currently playing");
+            });
         })
         .catch(err => {
           res.status(500).send("Failed to refresh Spotify token");
